@@ -5,3 +5,15 @@ ai-architecture-bot
 /models        → AI scripts & notebooks
 /docs          → Documentation guides
 /examples      → Sample compliance reports
+
+architecture-ai/
+│
+├── drawings/
+├── standards/
+├── models/
+├── docs/
+├── examples/
+│   └── .gitkeep
+└── .github/
+    └── workflows/
+        └── validate.yml
