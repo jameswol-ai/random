@@ -1,0 +1,5 @@
+# Workflow: Compliance Check
+steps:
+  - load: building_codes
+  - validate: design_documents
+  - output: compliance_report
