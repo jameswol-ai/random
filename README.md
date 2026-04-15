@@ -1,4 +1,4 @@
-# saiy
+# sai
 ai-architecture-bot
 /drawings      → CAD, IFC, DXF, SVG files
 /standards     → JSON/YAML building codes
