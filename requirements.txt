@@ -6,3 +6,7 @@ jupyter
 pytest
 flake8
 coverage
+
+
+pytest
+pytest-cov
