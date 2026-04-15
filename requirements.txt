@@ -2,3 +2,6 @@ ezdxf
 ifcopenshell
 pyyaml
 jupyter
+
+pytest
+flake8
