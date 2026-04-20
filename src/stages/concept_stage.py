@@ -1,20 +1,8 @@
-from core.helpers import (
-    get_from_context,
-    detect_climate,
-    suggest_materials,
-    log_stage
-)
-
 def concept_stage(ctx):
-    idea = get_from_context(ctx, "input")
+    input_text = ctx.get("input")
+    climate_rules = ctx.get("building_codes")
 
-    climate = detect_climate(idea)
-    materials = suggest_materials(climate)
+    if "tropical" in input_text.lower():
+        ctx.set("optimize_required", True)
 
-    log_stage("Concept", f"Detected climate: {climate}")
-
-    return {
-        "concept": f"Sustainable design for {climate} climate",
-        "materials": materials,
-        "climate": climate
-    }
+    return f"Concept based on input: {input_text}\nUsing climate logic:\n{climate_rules[:150]}..."
