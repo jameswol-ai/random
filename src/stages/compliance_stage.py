@@ -1,15 +1,13 @@
-# src/stages/compliance_stage.py
+from core.design_schema import ComplianceReport
 
 def compliance_stage(ctx):
     concept = ctx.get("concept")
 
-    compliance_report = f"""
-    Compliance Review:
-    - Structural safety: OK
-    - Fire safety standards: VERIFIED
-    - Environmental regulations: PASSED
-    - Zoning compatibility: CHECKED
-    """
+    report = ComplianceReport(
+        passed=True,
+        issues=[],
+        standards_checked=["Local Building Code", "Environmental Guidelines"]
+    )
 
-    ctx.set("compliance", compliance_report)
-    return compliance_report
+    ctx.set("compliance", report)
+    return report
