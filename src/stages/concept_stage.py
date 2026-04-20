@@ -1,14 +1,14 @@
-# src/stages/concept_stage.py
+from core.design_schema import DesignConcept
 
 def concept_stage(ctx):
-    user_input = ctx.get("input")
+    idea = ctx.get("input")
 
-    concept = f"""
-    Architectural Concept Generated:
-    - Core Idea: Sustainable design inspired by {user_input}
-    - Focus: Climate responsiveness, spatial efficiency, human comfort
-    - Style Direction: Modern eco-architecture with passive cooling systems
-    """
+    concept = DesignConcept(
+        title="Eco School Concept",
+        description=f"Design based on: {idea}",
+        climate_strategy="Natural ventilation, shaded courtyards",
+        materials=["bamboo", "compressed earth blocks", "recycled metal"]
+    )
 
     ctx.set("concept", concept)
     return concept
