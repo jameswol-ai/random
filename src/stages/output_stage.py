@@ -1,25 +1,20 @@
-# src/stages/output_stage.py
+from core.design_schema import FinalDesign, WorkflowResult
 
 def output_stage(ctx):
     concept = ctx.get("concept")
     compliance = ctx.get("compliance")
-    analysis = ctx.get("analysis")
 
-    final_plan = f"""
-    FINAL ARCHITECTURAL PLAN
-    =========================
+    final = FinalDesign(
+        concept=concept,
+        compliance=compliance,
+        drawings={"site_plan": "generated_placeholder"},
+        notes="Design optimized for tropical climate"
+    )
 
-    {concept}
+    result = WorkflowResult(
+        success=True,
+        design=final,
+        metadata={"version": "v1"}
+    )
 
-    --- COMPLIANCE ---
-    {compliance}
-
-    --- ANALYSIS ---
-    {analysis}
-
-    RESULT:
-    A fully validated eco-architectural blueprint ready for development.
-    """
-
-    ctx.set("final_output", final_plan)
-    return final_plan
+    return result
