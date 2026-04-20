@@ -1,26 +1,22 @@
-import os
-from openai import OpenAI
+from src.prompts import get_system_prompt
+from src.compliance import run_checks
 
-client = OpenAI(api_key=os.getenv("API_KEY"))
+def process_request(user_input, workflow):
+    prompt = get_system_prompt(workflow)
 
-def generate_response(prompt, context=""):
-    system_prompt = """
-    You are an Architectural AI assistant.
-    You help with:
-    - Building design concepts
-    - Space planning
-    - Construction methods
-    - Compliance with building standards
-    - Generating documentation ideas
+    # simulate reasoning layer (later can connect OpenAI / local LLM)
+    draft = f"""
+    [ARCHITECT AI ANALYSIS]
+    Mode: {workflow}
+
+    Input:
+    {user_input}
+
+    Step 1: Interpreting architectural intent...
+    Step 2: Applying structural logic...
+    Step 3: Evaluating space efficiency...
     """
 
-    response = client.chat.completions.create(
-        model="gpt-4.1-mini",
-        messages=[
-            {"role": "system", "content": system_prompt},
-            {"role": "user", "content": context + "\n" + prompt}
-        ],
-        temperature=0.7
-    )
+    compliance_report = run_checks(user_input)
 
-    return response.choices[0].message.content
+    return draft + "\n\n📋 Compliance Report:\n" + compliance_report
