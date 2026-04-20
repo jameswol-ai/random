@@ -1,30 +1,23 @@
 import streamlit as st
 from src.core import generate_response
-from workflows.design_workflow import design_concept
-from  import compliance_check
+from src.agents import run_design_team
 
-st.set_page_config("RANDOM Architectural AI", layout="wide")
+st.set_page_config(page_title="RANDOM Architectural AI", layout="wide")
 
-st.title("🏗️ RANDOM Architectural AI Assistant")
+st.title("🏗️ RANDOM — Architectural Intelligence System")
 
-mode = st.selectbox("Choose Mode", [
+mode = st.selectbox("Mode", [
     "General Chat",
-    "Floor Plan + Code Review (Full AI Team",
-    "Compliance Check"
+    "Floor Plan + Code Review (Full AI Team)"
 ])
 
 user_input = st.text_area("Describe your project")
 
 if st.button("Run"):
-    if user_input:
-        if mode == "Floor Plan + Code Review (Full AI Team":
-            prompt = design_concept(user_input)
-        elif mode == "Compliance Check":
-            prompt = compliance_check(user_input)
-        else:
-            prompt = user_input
+    if mode == "Floor Plan + Code Review (Full AI Team)":
+        output = run_design_team(user_input)
+    else:
+        output = generate_response(user_input)
 
-        response = generate_response(prompt)
-
-        st.subheader("Result")
-        st.write(response)
+    st.subheader("Result")
+    st.write(output)
