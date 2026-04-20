@@ -1,23 +1,21 @@
 import streamlit as st
-from src.core import generate_response
-from src.agents import run_design_team
+from src.core import process_request
 
-st.set_page_config(page_title="RANDOM Architectural AI", layout="wide")
+st.set_page_config(page_title="Architect AI", layout="wide")
 
-st.title("🏗️ RANDOM — Architectural Intelligence System")
+st.title("🏗️ Architectural AI Bot (random engine)")
 
-mode = st.selectbox("Mode", [
-    "General Chat",
-    "Floor Plan + Code Review (Full AI Team)"
-])
+user_input = st.text_area("Describe your building idea:")
 
-user_input = st.text_area("Describe your project")
+workflow = st.selectbox(
+    "Choose mode",
+    ["Residential Design", "Urban Planning", "Compliance Check"]
+)
 
-if st.button("Run"):
-    if mode == "Floor Plan + Code Review (Full AI Team)":
-        output = run_design_team(user_input)
+if st.button("Generate Design"):
+    if user_input.strip():
+        result = process_request(user_input, workflow)
+        st.markdown("### 🧠 AI Output")
+        st.write(result)
     else:
-        output = generate_response(user_input)
-
-    st.subheader("Result")
-    st.write(output)
+        st.warning("Please enter a request.")
