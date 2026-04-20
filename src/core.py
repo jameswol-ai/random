@@ -1,22 +1,24 @@
-from src.prompts import get_system_prompt
-from src.compliance import run_checks
+from src.core.context import Context
+from src.core.engine import WorkflowEngine
 
-def process_request(user_input, workflow):
-    prompt = get_system_prompt(workflow)
+from src.stages.concept_stage import concept_stage
+from src.stages.compliance_stage import compliance_stage
+from src.stages.analysis_stage import analysis_stage
+from src.stages.output_stage import output_stage
 
-    # simulate reasoning layer (later can connect OpenAI / local LLM)
-    draft = f"""
-    [ARCHITECT AI ANALYSIS]
-    Mode: {workflow}
 
-    Input:
-    {user_input}
+context = Context()
+context.set("input", "eco-friendly school in tropical climate")
 
-    Step 1: Interpreting architectural intent...
-    Step 2: Applying structural logic...
-    Step 3: Evaluating space efficiency...
-    """
+engine = WorkflowEngine(context)
 
-    compliance_report = run_checks(user_input)
+workflow = [
+    concept_stage,
+    compliance_stage,
+    analysis_stage,
+    output_stage
+]
 
-    return draft + "\n\n📋 Compliance Report:\n" + compliance_report
+result = engine.run(workflow)
+
+print(result)
