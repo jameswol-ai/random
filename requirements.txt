@@ -1,12 +1,1 @@
-ezdxf
-ifcopenshell
-pyyaml
-jupyter
-
-pytest
-flake8
-coverage
-
-
-pytest
-pytest-cov
+streamlit
