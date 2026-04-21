@@ -1,17 +1,25 @@
 # src/stages/compliance_stage.py
 
+from src.models.stage_contract import StageResult, stage_input
+
 def compliance_stage(ctx):
-    input_text = ctx.get("input", "")
-    docs = ctx.get("knowledge", [])
+    data = stage_input(ctx)
 
-    rules_found = []
+    knowledge = data["knowledge"]
 
-    for doc in docs:
-        rules_found.append(doc["doc"])
+    rules_used = [doc["doc"] for doc in knowledge] if knowledge else []
 
-    return {
-        "status": "checked",
-        "input": input_text,
-        "rules_used": rules_found,
-        "message": "📋 Compliance validated using building codes"
-    }
+    # 🧠 simple rule logic (future AI replacement point)
+    if not rules_used:
+        status = "warning"
+    else:
+        status = "validated"
+
+    return StageResult(
+        output="Compliance check completed",
+        status=status,
+        signals={
+            "rules_used": rules_used,
+            "risk_level": "low" if rules_used else "unknown"
+        }
+    ).to_dict()
