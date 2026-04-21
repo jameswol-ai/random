@@ -1,19 +1,17 @@
-class MemoryStore:
+# src/core/memory.py
+
+class Memory:
     def __init__(self):
-        # format: {stage_name: {"success": int, "count": int}}
-        self.stats = {}
+        self.history = []
 
-    def record(self, stage_name, success=True):
-        if stage_name not in self.stats:
-            self.stats[stage_name] = {"success": 0, "count": 0}
+    def record(self, entry):
+        self.history.append(entry)
 
-        self.stats[stage_name]["count"] += 1
-        if success:
-            self.stats[stage_name]["success"] += 1
+    def get_all(self):
+        return self.history
 
-    def score(self, stage_name):
-        data = self.stats.get(stage_name)
-        if not data or data["count"] == 0:
-            return 0.5  # neutral prior
-
-        return data["success"] / data["count"]
+    def summarize(self):
+        return {
+            "total_runs": len(self.history),
+            "last": self.history[-1] if self.history else None
+        }
