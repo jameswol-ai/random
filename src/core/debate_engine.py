@@ -1,8 +1,12 @@
 # src/core/debate_engine.py
 
+from src.core.mutation_engine import MutationEngine
+
+
 class DebateEngine:
     def __init__(self, agent):
         self.agent = agent
+        self.mutator = MutationEngine()
 
     def run_debate(self, context):
         roles = [
@@ -12,31 +16,23 @@ class DebateEngine:
             "compliance_officer"
         ]
 
-        # 🧠 initial idea seed from architect
-        architect_first = self.agent.debate("architect", context, [])
+        idea = self.agent.debate("architect", context, [])
 
-        conversation = [architect_first]
+        conversation = [idea]
 
-        # 🔁 iterative argument exchange
-        for role in roles[1:]:
-            response = self.agent.debate(role, context, conversation)
-            conversation.append(response)
+        # 🔁 debate + mutation cycle
+        for i in range(2):
+            for role in roles[1:]:
+                response = self.agent.debate(role, context, conversation)
+                conversation.append(response)
 
-        # 🔄 second round: reactions
-        refined = []
-        for role in roles:
-            response = self.agent.debate(role, context, conversation)
-            refined.append(response)
+                # 🧬 idea evolves after critique
+                idea["message"] = self.mutator.mutate(
+                    idea["message"],
+                    response["message"]
+                )
 
         return {
-            "initial_round": conversation,
-            "refined_round": refined,
-            "final_state": self._merge(refined)
-        }
-
-    def _merge(self, responses):
-        # 🧠 simplified consensus merge
-        return {
-            "final_design": responses[0]["message"],
-            "contributors": [r["speaker"] for r in responses]
+            "evolution_trace": conversation,
+            "final_design": idea
         }
