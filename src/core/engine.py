@@ -1,39 +1,32 @@
 # src/core/engine.py
 
 from src.core.workflow_loader import WorkflowLoader
-from src.core.dispatcher import Dispatcher
-from src.knowledge.doc_loader import DocLoader
-from src.knowledge.retriever import Retriever
+from src.core.mock_llm import MockLLM
+from src.core.llm_agent import LLMAgent
+from src.core.debate_engine import DebateEngine
 
 
 class WorkflowEngine:
     def __init__(self):
         self.loader = WorkflowLoader()
-        self.dispatcher = Dispatcher()
 
-        self.doc_loader = DocLoader()
-        self.retriever = Retriever(self.doc_loader)
+        self.llm = MockLLM()
+        self.agent = LLMAgent(self.llm)
+        self.debate = DebateEngine(self.agent)
 
         self.context = {}
 
     def set_context(self, key, value):
         self.context[key] = value
 
-    def run_workflow(self, workflow_name: str):
-
-        # 🧠 inject knowledge (context-aware memory)
-        input_text = self.context.get("input", "")
-        self.context["knowledge"] = self.retriever.search(input_text)
+    def run_workflow(self, workflow_name):
 
         workflow = self.loader.load(workflow_name)
 
-        results = self.dispatcher.execute(
-            workflow,
-            self.context
-        )
+        # 🧠 inject agent into context
+        self.context["agent"] = self.agent
 
-        return {
-            "workflow": workflow["name"],
-            "trace": results,
-            "final": results[-1] if results else None
-        }
+        # 🔥 run debate-based reasoning instead of simple pipeline
+        result = self.debate.run_debate(self.context)
+
+        return result
