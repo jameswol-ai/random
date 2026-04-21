@@ -1,8 +1,33 @@
 # src/core/dispatcher.py
 
-class Dispatcher:
-    def __init__(self, workflows):
-        self.workflows = workflows
+from src.stages.registry import get_stage
 
-    def get_workflow(self, name):
-        return self.workflows.get(name, [])
+
+class Dispatcher:
+    def execute(self, workflow, context):
+        graph = workflow["graph"]
+        current = workflow["entry"]
+
+        results = []
+
+        while current is not None:
+            stage_fn = get_stage(current)
+
+            output = stage_fn(context)
+            context["last_output"] = output
+
+            results.append({
+                "stage": current,
+                "output": output
+            })
+
+            # 🔁 decide next step
+            current = self._resolve_next(graph, current, context)
+
+        return results
+
+    def _resolve_next(self, graph, current, context):
+        node = graph.get(current, {})
+
+        # 🧠 future upgrade hook: conditional branching
+        return node.get("next")
