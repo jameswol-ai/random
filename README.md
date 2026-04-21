@@ -1,4 +1,5 @@
-#random
+#random Ai
+
 ai-architecture-bot
 
 Random AI is an AI tool that helps architects and engineers in East Africa design, check compliance, and prepare documentation quickly and efficiently.
