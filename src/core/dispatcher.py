@@ -21,26 +21,17 @@ class Dispatcher:
                 "output": output
             })
 
-            # 🔁 decide next step
-            current = self._resolve_next(graph, current, context)
+            current = self._resolve_next(graph, current, context, output)
 
         return results
 
-    def _resolve_next(self, graph, current, context):
+    def _resolve_next(self, graph, current, context, last_output):
         node = graph.get(current, {})
 
-        # 🧠 future upgrade hook: conditional branching
-        return node.get("next")
+        signals = last_output.get("signals", {})
 
-
-def _resolve_next(self, graph, current, context):
-    node = graph.get(current, {})
-
-    last_output = context.get("last_output", "")
-
-    # 🧠 future AI logic hook (rule-based for now)
-    if isinstance(last_output, dict):
-        if "error" in last_output:
+        # 🧠 intelligent reroute hook
+        if signals.get("risk_level") == "unknown":
             return "compliance"
 
-    return node.get("next")
+        return node.get("next")
