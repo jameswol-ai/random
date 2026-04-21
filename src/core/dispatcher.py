@@ -31,3 +31,16 @@ class Dispatcher:
 
         # 🧠 future upgrade hook: conditional branching
         return node.get("next")
+
+
+def _resolve_next(self, graph, current, context):
+    node = graph.get(current, {})
+
+    last_output = context.get("last_output", "")
+
+    # 🧠 future AI logic hook (rule-based for now)
+    if isinstance(last_output, dict):
+        if "error" in last_output:
+            return "compliance"
+
+    return node.get("next")
