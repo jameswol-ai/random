@@ -1,39 +1,16 @@
 {
-  "name": "eco_building",
-  "description": "Design an eco-friendly building optimized for climate and materials",
-  "stages": [
+  "basic_design": [
     {
-      "name": "input_validation",
-      "function": "validate_input"
-    },
-    {
-      "name": "concept_stage",
-      "function": "concept_stage"
-    },
-    {
-      "name": "climate_analysis",
-      "function": "climate_stage"
-    },
-    {
-      "name": "material_selection",
-      "function": "material_stage"
+      "name": "concept_stage"
     },
     {
       "name": "compliance_stage",
-      "function": "compliance_stage"
+      "condition": {
+        "if": "climate == tropical"
+      }
     },
     {
-      "name": "output_stage",
-      "function": "output_stage"
+      "name": "output_stage"
     }
-  ]
-}
-
-
-{
-  "basic_design": [
-    { "name": "concept_stage" },
-    { "name": "compliance_stage" },
-    { "name": "output_stage" }
   ]
 }
