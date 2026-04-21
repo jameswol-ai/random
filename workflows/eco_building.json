@@ -1,16 +1,17 @@
+{"name": "concept", "func": concept_stage}
+
+
 {
-  "basic_design": [
-    {
-      "name": "concept_stage"
-    },
-    {
-      "name": "compliance_stage",
-      "condition": {
-        "if": "climate == tropical"
-      }
-    },
-    {
-      "name": "output_stage"
-    }
-  ]
+    "name": "concept",
+    "func": concept_stage,
+    "condition": None
 }
+
+
+{
+    "name": "compliance",
+    "func": compliance_stage,
+    "condition": lambda ctx: ctx.get("concept_stage") is not None
+}
+
+
