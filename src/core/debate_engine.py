@@ -1,38 +1,43 @@
 # src/core/debate_engine.py
-
-from src.core.mutation_engine import MutationEngine
+from src.core.agent_metrics import AgentMetrics
+from src.core.memory import Memory
 
 
 class DebateEngine:
     def __init__(self, agent):
         self.agent = agent
-        self.mutator = MutationEngine()
+        self.metrics = AgentMetrics()
+        self.memory = Memory()
 
     def run_debate(self, context):
-        roles = [
-            "architect",
-            "structural_engineer",
-            "climate_specialist",
-            "compliance_officer"
-        ]
+        roles = list(self.metrics.scores.keys())
 
-        idea = self.agent.debate("architect", context, [])
+        conversation = []
 
-        conversation = [idea]
+        # 🧠 debate phase
+        for role in roles:
+            response = self.agent.debate(role, context, conversation)
+            conversation.append(response)
 
-        # 🔁 debate + mutation cycle
-        for i in range(2):
-            for role in roles[1:]:
-                response = self.agent.debate(role, context, conversation)
-                conversation.append(response)
+        # 📊 evaluation phase
+        self._evaluate(conversation)
 
-                # 🧬 idea evolves after critique
-                idea["message"] = self.mutator.mutate(
-                    idea["message"],
-                    response["message"]
-                )
+        # 🧠 store memory
+        self.memory.record({
+            "input": context.get("input"),
+            "conversation": conversation
+        })
 
         return {
-            "evolution_trace": conversation,
-            "final_design": idea
+            "conversation": conversation,
+            "metrics": self.metrics.scores
         }
+
+    def _evaluate(self, conversation):
+        for item in conversation:
+            score = item.get("score", 0.5)
+
+            self.metrics.update(
+                item["speaker"],
+                score
+            )
