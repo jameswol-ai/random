@@ -1,8 +1,31 @@
+#src/stages/concept_stage.py
+
+from src.models.agent import AgentResponse
+
+
 def concept_stage(ctx):
-    input_text = ctx.get("input")
-    climate_rules = ctx.get("building_codes")
+    user_input = ctx.get("input", "")
 
-    if "tropical" in input_text.lower():
-        ctx.set("optimize_required", True)
+    # 🎨 Generator
+    idea = f"Architectural concept for: {user_input}"
 
-    return f"Concept based on input: {input_text}\nUsing climate logic:\n{climate_rules[:150]}..."
+    # 🔍 Critic (internal review simulation)
+    critique = ""
+
+    confidence = 0.75
+
+    if "school" in user_input.lower():
+        critique = "Good functional scope, but needs climate adaptation detail."
+        confidence = 0.8
+    else:
+        critique = "Concept is general; requires more specificity."
+
+    return AgentResponse(
+        output=idea,
+        critique=critique,
+        confidence=confidence,
+        signals={
+            "creativity": confidence,
+            "type": "concept"
+        }
+    ).to_dict()
