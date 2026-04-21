@@ -21,17 +21,15 @@ class Dispatcher:
                 "output": output
             })
 
-            current = self._resolve_next(graph, current, context, output)
+            # 🧠 refinement loop trigger
+            if self._needs_refinement(output):
+                current = "refiner"
+                continue
+
+            current = graph.get(current, {}).get("next")
 
         return results
 
-    def _resolve_next(self, graph, current, context, last_output):
-        node = graph.get(current, {})
-
-        signals = last_output.get("signals", {})
-
-        # 🧠 intelligent reroute hook
-        if signals.get("risk_level") == "unknown":
-            return "compliance"
-
-        return node.get("next")
+    def _needs_refinement(self, output):
+        confidence = output.get("confidence", 1.0)
+        return confidence < 0.75
