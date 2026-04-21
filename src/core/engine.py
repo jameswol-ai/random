@@ -1,6 +1,7 @@
 # src/core/engine.py
 
 from src.core.workflow_loader import WorkflowLoader
+from src.core.dispatcher import Dispatcher
 from src.knowledge.doc_loader import DocLoader
 from src.knowledge.retriever import Retriever
 
@@ -8,6 +9,7 @@ from src.knowledge.retriever import Retriever
 class WorkflowEngine:
     def __init__(self):
         self.loader = WorkflowLoader()
+        self.dispatcher = Dispatcher()
 
         self.doc_loader = DocLoader()
         self.retriever = Retriever(self.doc_loader)
@@ -19,25 +21,19 @@ class WorkflowEngine:
 
     def run_workflow(self, workflow_name: str):
 
-        # 🧠 inject knowledge into context
+        # 🧠 inject knowledge (context-aware memory)
         input_text = self.context.get("input", "")
-        knowledge = self.retriever.search(input_text)
-
-        self.context["knowledge"] = knowledge
+        self.context["knowledge"] = self.retriever.search(input_text)
 
         workflow = self.loader.load(workflow_name)
-        pipeline = workflow["pipeline"]
 
-        results = []
-
-        for stage in pipeline:
-            output = stage(self.context)
-            self.context["last_output"] = output
-            results.append(output)
+        results = self.dispatcher.execute(
+            workflow,
+            self.context
+        )
 
         return {
             "workflow": workflow["name"],
-            "results": results,
-            "final": results[-1] if results else None,
-            "knowledge_used": knowledge
+            "trace": results,
+            "final": results[-1] if results else None
         }
