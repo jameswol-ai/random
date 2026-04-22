@@ -2,7 +2,7 @@
 
 import streamlit as st
 
-from src.core.engine import WorkflowEngine
+
 from src.stages.basic_stages import (
     concept_stage,
     compliance_stage,
@@ -32,7 +32,7 @@ user_input = st.text_input("Enter your project idea:")
 
 if st.button("Run Workflow"):
     engine = WorkflowEngine(workflow, functions)
-    engine.set_context("input", user_input)
+    
 
     result = engine.run_workflow("basic_design")
 
