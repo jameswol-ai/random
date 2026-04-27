@@ -1,4 +1,4 @@
-#src/stages/concept_stage.py
+# src/stages/concept_stage.py
 
 class ConceptStage:
     def run(self, context):
