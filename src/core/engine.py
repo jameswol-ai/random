@@ -17,16 +17,27 @@ class WorkflowEngine:
         log = []
 
         for name, stage_fn in self.workflow:
-            result = stage_fn(self.context)
+            try:
+                result = stage_fn(self.context)
 
-            if result:
+                if not isinstance(result, dict):
+                    result = {"output": result}
+
                 for k, v in result.items():
                     self.context.set(k, v)
 
-            log.append({
-                "stage": name,
-                "output": result
-            })
+                log.append({
+                    "stage": name,
+                    "output": result,
+                    "status": "ok"
+                })
+
+            except Exception as e:
+                log.append({
+                    "stage": name,
+                    "error": str(e),
+                    "status": "failed"
+                })
 
         return {
             "final_context": self.context.data,
