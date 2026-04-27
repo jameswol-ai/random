@@ -284,3 +284,14 @@ class MetaObserver:
             return "structural drift"
         else:
             return "systemic decay"
+
+intent_engine = IntentEngine(city.memory)
+
+intent = intent_engine.derive_intent()
+
+st.subheader("🧭 System Intent Layer")
+
+st.write("🎯 Intent:", intent["intent"])
+st.write("📊 Confidence:", intent["confidence"])
+st.write("🏛 Dominant Node:", intent["dominant_node"])
+st.write("🚦 Preferred Route:", intent["preferred_route"])
