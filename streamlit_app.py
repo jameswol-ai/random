@@ -25,7 +25,7 @@ for path in POSSIBLE_PATHS:
 # --------------------------------------------------
 st.set_page_config(page_title="AI Architecture Bot", layout="wide")
 
-st.title("🏗️ AI Architecture Bot")
+st.title("AI Architecture Bot")
 st.caption("Resilient Workflow Engine • Debug Mode Enabled")
 
 # --------------------------------------------------
