@@ -1,5 +1,9 @@
 # src/stages/refiner_stage.py
 
+from models.prompt_models import generate_text
+
+concept = generate_text(f"Create architectural concept: {idea}")
+
 from src.models.agent import AgentResponse
 
 
