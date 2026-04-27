@@ -1,40 +1,34 @@
 # src/core/engine.py
 
-from core.conditions import evaluate_condition
-
-from stages import (
-    concept_stage,
-    climate_check,
-    eco_design,
-    final_output
-)
-
-STAGE_MAP = {
-    "concept_stage": concept_stage,
-    "climate_check": climate_check,
-    "eco_design": eco_design,
-    "final_output": final_output
-}
+from core.context import Context
+import core.stages as stages
 
 class WorkflowEngine:
-    def __init__(self, workflow):
-        self.workflow = workflow["adaptive_design"]
+    def __init__(self):
+        self.context = Context()
 
-    def run_workflow(self, ctx):
-        results = {}
+        self.workflow = [
+            ("concept_stage", stages.concept_stage),
+            ("climate_check", stages.climate_check),
+            ("eco_design", stages.eco_design),
+        ]
 
-        for step in self.workflow:
-            name = step["name"]
+    def run(self):
+        log = []
 
-            # 🧠 condition gate
-            if "condition" in step:
-                if not evaluate_condition(step["condition"], ctx):
-                    continue
+        for name, stage_fn in self.workflow:
+            result = stage_fn(self.context)
 
-            func = STAGE_MAP[name]
-            output = func(ctx)
+            if result:
+                for k, v in result.items():
+                    self.context.set(k, v)
 
-            results[step["output_key"]] = output
-            ctx[step["output_key"]] = output
+            log.append({
+                "stage": name,
+                "output": result
+            })
 
-        return results
+        return {
+            "final_context": self.context.data,
+            "log": log
+        }
