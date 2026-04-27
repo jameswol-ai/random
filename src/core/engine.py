@@ -1,54 +1,74 @@
 # src/core/engine.py
 
- def run(self):
-    log = []
-    summary_points = []
+from core.context import Context
+import core.stages as stages
 
-    for name, stage_fn in self.workflow:
-        try:
-            result = stage_fn(self.context)
+class WorkflowEngine:
+    def __init__(self):
+        self.context = Context()
 
-            if not isinstance(result, dict):
-                result = {"output": result}
+        self.workflow = [
+            ("concept_stage", stages.concept_stage),
+            ("climate_check", stages.climate_check),
+            ("eco_design", stages.eco_design),
+        ]
 
-            for k, v in result.items():
-                self.context.set(k, v)
+    def run(self):
+        log = []
+        summary_points = []
 
-            summary_points.append(f"{name} completed successfully")
+        for name, stage_fn in self.workflow:
+            try:
+                result = stage_fn(self.context)
 
-            log.append({
-                "stage": name,
-                "status": "ok",
-                "output": result
-            })
+                if not isinstance(result, dict):
+                    result = {"output": result}
 
-        except Exception as e:
-            summary_points.append(f"{name} failed")
+                for k, v in result.items():
+                    self.context.set(k, v)
 
-            log.append({
-                "stage": name,
-                "status": "failed",
-                "error": str(e)
-            })
+                summary_points.append(name)
 
-    return {
-        "summary": {
-            "title": "Random Execution Report",
-            "insight": self._generate_insight(summary_points)
-        },
-        "timeline": log,
-        "final_context": self.context.data
-    }
+                log.append({
+                    "stage": name,
+                    "status": "ok",
+                    "output": result
+                })
 
+            except Exception as e:
+                summary_points.append(f"{name}_failed")
 
-def _generate_insight(self, points):
-    if not points:
-        return "No execution data available."
+                log.append({
+                    "stage": name,
+                    "status": "failed",
+                    "error": str(e)
+                })
 
-    success = len([p for p in points if "completed" in p])
-    failed = len([p for p in points if "failed" in p])
+        # 🧠 SELF-REFLECTION (this is the “alive” part)
+        reflection = self._reflect(summary_points)
 
-    if failed == 0:
-        return f"All systems stable. {success} stages executed smoothly."
+        run_summary = {
+            "completed_stages": summary_points,
+            "reflection": reflection
+        }
 
-    return f"{success} stages succeeded, {failed} encountered instability."
+        self.context.remember_run(run_summary)
+
+        return {
+            "summary": run_summary,
+            "timeline": log,
+            "memory_depth": len(self.context.history),
+            "final_context": self.context.data
+        }
+
+    def _reflect(self, points):
+        success = len([p for p in points if "failed" not in p])
+        failed = len(points) - success
+
+        if failed == 0:
+            return "System flow is stable. Patterns are consistent."
+
+        if success > failed:
+            return "Mostly stable execution with minor turbulence."
+
+        return "System instability detected. Workflow coherence degraded."
