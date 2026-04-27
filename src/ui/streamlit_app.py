@@ -1,40 +1,24 @@
 # src/ui/streamlit_app.py
 
 import streamlit as st
-from src.core.engine import WorkflowEngine
-from src.memory.memory_store import MemoryStore
+from core.engine import WorkflowEngine
 
-st.title("🧠 RANDOM v2 — Living Workflow Engine")
+st.title("🧬 Random Dual-Layer Mode")
 
-memory = MemoryStore()
-engine = WorkflowEngine(memory)
+if st.button("Run Engine"):
+    engine = WorkflowEngine()
+    result = engine.run()
 
-workflow = st.selectbox("Choose workflow", ["default"])
-user_input = st.text_area("Input")
+    # 📖 Narrative Layer (human)
+    st.subheader("📖 Narrative Layer")
+    for line in result["narrative_layer"]["story"]:
+        st.write(line)
 
-if st.button("Run Random 🚀"):
-    context = {"input": user_input, "data": {}}
+    st.info(result["narrative_layer"]["reflection"])
 
-    result, trace = engine.run(workflow, context)
+    # ⚙️ Machine Layer (system truth)
+    st.subheader("⚙️ Machine Layer")
+    st.json(result["machine_layer"]["log"])
 
-    st.subheader("Execution Trace")
-    for step in trace:
-        st.write(step)
-
-    st.subheader("Final Output")
-    st.json(result.data)
-
-    st.subheader("Memory Snapshot")
-    st.json(memory.load())
-
-st.subheader("🧠 Insights (Self Reflection)")
-st.write(insights)
-
-st.subheader("🔁 Evolved Workflow")
-st.json(memory.load().get("last_workflow", {}))
-
-st.subheader("🧠 Reflection")
-st.info(result["summary"]["reflection"])
-
-st.subheader("🧬 Memory Depth")
-st.metric("Runs remembered", result["memory_depth"])
+    st.subheader("📦 Final Context")
+    st.json(result["machine_layer"]["context"])
