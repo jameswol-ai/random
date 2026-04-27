@@ -1,16 +1,40 @@
 # src/core/engine.py
 
-from core.context import Context
-from core.dispatcher import Dispatcher
+from core.conditions import evaluate_condition
+
+from stages import (
+    concept_stage,
+    climate_check,
+    eco_design,
+    final_output
+)
+
+STAGE_MAP = {
+    "concept_stage": concept_stage,
+    "climate_check": climate_check,
+    "eco_design": eco_design,
+    "final_output": final_output
+}
 
 class WorkflowEngine:
-    def __init__(self, workflow_config):
-        self.dispatcher = Dispatcher(workflow_config)
+    def __init__(self, workflow):
+        self.workflow = workflow["adaptive_design"]
 
-    def run_workflow(self, input_data):
-        context = Context(input_data)
+    def run_workflow(self, ctx):
+        results = {}
 
-        for stage in self.dispatcher.get_stages():
-            context = stage.run(context)
+        for step in self.workflow:
+            name = step["name"]
 
-        return context.data
+            # 🧠 condition gate
+            if "condition" in step:
+                if not evaluate_condition(step["condition"], ctx):
+                    continue
+
+            func = STAGE_MAP[name]
+            output = func(ctx)
+
+            results[step["output_key"]] = output
+            ctx[step["output_key"]] = output
+
+        return results
