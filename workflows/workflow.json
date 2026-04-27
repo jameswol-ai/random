@@ -1,0 +1,22 @@
+architectural_workflow = {
+    "adaptive_design": [
+        {
+            "name": "concept_stage",
+            "output_key": "concept"
+        },
+        {
+            "name": "climate_check",
+            "condition": "is_tropical",
+            "output_key": "climate_result"
+        },
+        {
+            "name": "eco_design",
+            "condition": "needs_sustainability",
+            "output_key": "eco_plan"
+        },
+        {
+            "name": "final_output",
+            "output_key": "result"
+        }
+    ]
+}
