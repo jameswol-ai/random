@@ -1,35 +1,20 @@
 # src/core/dispatcher.py
 
-from src.stages.registry import get_stage
-
+from stages.concept_stage import ConceptStage
+from stages.analysis_stage import AnalysisStage
+from stages.compliance_stage import ComplianceStage
+from stages.output_stage import OutputStage
 
 class Dispatcher:
-    def execute(self, workflow, context):
-        graph = workflow["graph"]
-        current = workflow["entry"]
+    def __init__(self, config):
+        self.config = config
 
-        results = []
+    def get_stages(self):
+        stage_map = {
+            "concept": ConceptStage(),
+            "analysis": AnalysisStage(),
+            "compliance": ComplianceStage(),
+            "output": OutputStage(),
+        }
 
-        while current is not None:
-            stage_fn = get_stage(current)
-
-            output = stage_fn(context)
-            context["last_output"] = output
-
-            results.append({
-                "stage": current,
-                "output": output
-            })
-
-            # 🧠 refinement loop trigger
-            if self._needs_refinement(output):
-                current = "refiner"
-                continue
-
-            current = graph.get(current, {}).get("next")
-
-        return results
-
-    def _needs_refinement(self, output):
-        confidence = output.get("confidence", 1.0)
-        return confidence < 0.75
+        return [stage_map[name] for name in self.config["stages"]]
