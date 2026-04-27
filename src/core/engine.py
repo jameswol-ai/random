@@ -1,5 +1,7 @@
 # src/core/engine.py
 
+from core.context import Context
+
 class WorkflowEngine:
     def __init__(self):
         self.stages = [
