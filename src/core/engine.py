@@ -15,7 +15,10 @@ class WorkflowEngine:
 
     def run(self):
         log = []
+        story = []
         summary_points = []
+
+        story.append("🧠 Random wakes up. Workflow sequence begins.\n")
 
         for name, stage_fn in self.workflow:
             try:
@@ -29,6 +32,9 @@ class WorkflowEngine:
 
                 summary_points.append(name)
 
+                line = self._narrate_success(name, result)
+                story.append(line)
+
                 log.append({
                     "stage": name,
                     "status": "ok",
@@ -36,7 +42,8 @@ class WorkflowEngine:
                 })
 
             except Exception as e:
-                summary_points.append(f"{name}_failed")
+                line = self._narrate_failure(name, str(e))
+                story.append(line)
 
                 log.append({
                     "stage": name,
@@ -44,31 +51,41 @@ class WorkflowEngine:
                     "error": str(e)
                 })
 
-        # 🧠 SELF-REFLECTION (this is the “alive” part)
         reflection = self._reflect(summary_points)
 
-        run_summary = {
-            "completed_stages": summary_points,
-            "reflection": reflection
-        }
-
-        self.context.remember_run(run_summary)
+        story.append("\n🧠 System reflection: " + reflection)
+        story.append("📦 Workflow complete. Random returns to idle state.")
 
         return {
-            "summary": run_summary,
+            "story": story,
+            "summary": {
+                "reflection": reflection
+            },
             "timeline": log,
-            "memory_depth": len(self.context.history),
             "final_context": self.context.data
         }
 
+    # 🎭 NARRATION LAYER
+    def _narrate_success(self, stage, result):
+        if stage == "concept_stage":
+            return f"📐 Concept phase stabilized: foundational architecture ideas formed."
+
+        if stage == "climate_check":
+            return f"🌍 Climate analysis completed: environmental compatibility assessed."
+
+        if stage == "eco_design":
+            return f"🌱 Eco-design resolved: sustainability metrics integrated into structure."
+
+        return f"⚙️ {stage} completed successfully."
+
+    def _narrate_failure(self, stage, error):
+        return f"⚠️ {stage} encountered turbulence: {error}"
+
+    # 🧠 REFLECTION ENGINE
     def _reflect(self, points):
-        success = len([p for p in points if "failed" not in p])
-        failed = len(points) - success
+        success = len(points)
 
-        if failed == 0:
-            return "System flow is stable. Patterns are consistent."
+        if success == len(self.workflow):
+            return "System coherence maintained. No structural instability detected."
 
-        if success > failed:
-            return "Mostly stable execution with minor turbulence."
-
-        return "System instability detected. Workflow coherence degraded."
+        return "Partial instability detected. Workflow adapted but not fully optimized."
