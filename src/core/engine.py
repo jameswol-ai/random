@@ -1,29 +1,40 @@
 # src/core/engine.py
 
-from src.core.registry import StageRegistry
+from src.core.reflection import ReflectionEngine
+from src.core.evolver import WorkflowEvolver
 
 class WorkflowEngine:
-    def __init__(self, memory=None):
-        self.registry = StageRegistry()
+    def __init__(self, registry, memory):
+        self.registry = registry
         self.memory = memory
+        self.reflector = ReflectionEngine()
+        self.evolver = WorkflowEvolver()
 
-    def run(self, workflow_name, context):
-        workflow = self.registry.get_workflow(workflow_name)
-
-        current_stage = workflow["start"]
-
+    def run(self, workflow, context):
         trace = []
 
-        while current_stage:
-            stage = self.registry.get_stage(current_stage)
+        for stage_name in workflow["stages"]:
+            stage = self.registry.get_stage(stage_name)
 
-            context = stage.run(context, self.memory)
+            try:
+                context = stage.run(context, self.memory)
+            except Exception as e:
+                context.add_error(e)
 
             trace.append({
-                "stage": current_stage,
-                "output": context.data
+                "stage": stage_name,
+                "output": context.data.copy()
             })
 
-            current_stage = stage.next(context)
+        # 🧠 REFLECTION PHASE
+        insights = self.reflector.analyze(trace)
 
-        return context, trace
+        # 🔁 EVOLUTION PHASE
+        changes = self.reflector.suggest_changes(insights)
+        workflow = self.evolver.apply(workflow, changes)
+
+        # 💾 SAVE LEARNING
+        self.memory.update("last_insights", insights)
+        self.memory.update("last_workflow", workflow)
+
+        return context, trace, insights
