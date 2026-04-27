@@ -1,142 +1,142 @@
 # random/streamlit_app.py 
 
-import streamlit as st from dataclasses import dataclass, field from typing import List, Dict, Any, Optional import random
+import streamlit as st
+import traceback
 
-=========================
+# -----------------------------
+# SAFE IMPORT LAYER
+# -----------------------------
 
-🌱 LIVING STATE LAYER
+try:
+    # preferred import path (your project version)
+    from src.core.engine import WorkflowEngine
+except Exception:
+    WorkflowEngine = None
 
-=========================
 
-@dataclass class LivingState: memory: List[Dict[str, Any]] = field(default_factory=list) emotion_tone: str = "neutral" last_output: Optional[Any] = None evolution_score: int = 0
+# -----------------------------
+# FALLBACK ENGINE (CRASH-PROOF)
+# -----------------------------
 
-def observe(self, event: Dict[str, Any]):
-    self.memory.append(event)
-    self.evolution_score += 1
-
-def reflect(self) -> Dict[str, Any]:
-    return {
-        "memory_depth": len(self.memory),
-        "tone": self.emotion_tone,
-        "evolution": self.evolution_score
-    }
-
-=========================
-
-🎭 NARRATIVE LAYER
-
-=========================
-
-class NarrativeLayer: def narrate(self, stage: str, output: Any) -> str: return f"🌿 {stage} breathes through the system: {output}"
-
-=========================
-
-🧬 EXPANSION ENGINE
-
-=========================
-
-class ExpansionEngine: def maybe_expand(self, state: LivingState) -> Optional[Dict[str, Any]]: if state.evolution_score > 0 and state.evolution_score % 5 == 0: return { "name": "emergent_thinking", "type": "auto_generated_stage" } return None
-
-=========================
-
-🧠 SELF-EDIT ENGINE
-
-=========================
-
-class SelfEditEngine: def mutate(self, workflow: List[Dict[str, Any]], state: LivingState) -> List[Dict[str, Any]]: """ The system rewrites its own structure based on memory + evolution. """ new_workflow = list(workflow)
-
-# 🧬 Rule 1: Evolution unlocks new stage
-    if state.evolution_score > 3:
-        new_stage = {
-            "name": "adaptive_reasoning",
-            "type": "self_generated"
+class FallbackWorkflowEngine:
+    def __init__(self):
+        self.state = {
+            "status": "fallback_active",
+            "memory": [],
+            "ticks": 0
         }
-        if new_stage not in new_workflow:
-            new_workflow.insert(1, new_stage)
 
-    # 🌪 Rule 2: Random mutation (controlled chaos)
-    if state.evolution_score > 6:
-        if random.random() > 0.5:
-            new_workflow.append({
-                "name": "chaos_reflection",
-                "type": "mutation"
-            })
+    def run(self, input_data=None):
+        self.state["ticks"] += 1
 
-    # 🧠 Rule 3: Memory echo stage injection
-    if len(state.memory) > 4:
-        new_workflow.append({
-            "name": "memory_echo",
-            "type": "reflective"
-        })
+        result = {
+            "message": "Fallback engine is running",
+            "input": input_data,
+            "tick": self.state["ticks"]
+        }
 
-    return new_workflow
+        self.state["memory"].append(result)
+        return result
 
-=========================
+    def tick(self):
+        self.state["ticks"] += 1
+        return self.state["ticks"]
 
-⚙️ WORKFLOW ENGINE (ALIVE + SELF-EDITING)
 
-=========================
+# -----------------------------
+# ENGINE INITIALIZATION
+# -----------------------------
 
-class WorkflowEngine: def init(self): self.base_workflow = [ {"name": "concept_stage"}, {"name": "climate_check"}, {"name": "eco_design"} ] self.state = LivingState() self.narrator = NarrativeLayer() self.expander = ExpansionEngine() self.self_editor = SelfEditEngine()
+if WorkflowEngine:
+    try:
+        engine = WorkflowEngine()
+        engine_mode = "primary"
+    except Exception:
+        engine = FallbackWorkflowEngine()
+        engine_mode = "fallback_due_to_init_error"
+else:
+    engine = FallbackWorkflowEngine()
+    engine_mode = "fallback_missing_engine"
 
-def execute_stage(self, stage: Dict[str, Any], input_data: str) -> str:
-    return f"processed({stage['name']}) on '{input_data}'"
 
-def run(self, input_data: str):
-    workflow = self.self_editor.mutate(self.base_workflow, self.state)
-    results = []
+# -----------------------------
+# STREAMLIT UI
+# -----------------------------
 
-    for stage in workflow:
-        output = self.execute_stage(stage, input_data)
+st.set_page_config(page_title="Random Engine", layout="wide")
 
-        self.state.observe({
-            "stage": stage["name"],
-            "output": output
-        })
+st.title("Random Engine Control Center")
 
-        narrated = self.narrator.narrate(stage["name"], output)
-        results.append(narrated)
+st.caption(f"Engine mode: {engine_mode}")
 
-        new_stage = self.expander.maybe_expand(self.state)
-        if new_stage:
-            workflow.append(new_stage)
 
-    return results, self.state.reflect()
+# -----------------------------
+# INPUT PANEL
+# -----------------------------
 
-=========================
-
-🖥️ STREAMLIT UI
-
-=========================
-
-st.set_page_config(page_title="Random Alive Self-Editing System", layout="wide")
-
-st.title("🌱 Random: Self-Editing Living System v3") st.caption("A workflow engine that grows, remembers, narrates, AND rewrites itself.")
-
-if "engine" not in st.session_state: st.session_state.engine = WorkflowEngine()
-
-engine = st.session_state.engine
-
-input_data = st.text_input("Enter architecture prompt:", "design a tropical smart city")
+user_input = st.text_input("Enter workflow input", "")
 
 col1, col2 = st.columns(2)
 
-with col1: run_btn = st.button("Run Alive Workflow") edit_btn = st.button("Self-Edit Cycle")
+with col1:
+    run_button = st.button("Run Engine")
 
-if run_btn: with st.spinner("The system is thinking… evolving… rewriting itself 🌿🧠"): results, reflection = engine.run(input_data)
+with col2:
+    tick_button = st.button("Alive Tick")
 
-st.subheader("🌿 Narrative Output")
-for r in results:
-    st.write(r)
 
-st.subheader("🧠 System Reflection")
-st.json(reflection)
+# -----------------------------
+# EXECUTION AREA
+# -----------------------------
 
-if edit_btn: with st.spinner("System is rewriting its own structure… 🧬"): engine.base_workflow = engine.self_editor.mutate(engine.base_workflow, engine.state)
+if run_button:
+    try:
+        if hasattr(engine, "run"):
+            result = engine.run(user_input)
+        else:
+            result = {"error": "Engine has no run() method"}
 
-st.success("Workflow has self-edited its architecture.")
-st.json(engine.base_workflow)
+        st.success("Execution complete")
+        st.json(result)
 
-with col2: if st.button("Show Memory"): st.subheader("🧬 Memory Trace") st.json(engine.state.memory)
+    except Exception as e:
+        st.error("Engine execution failed")
+        st.code(traceback.format_exc())
 
-if st.button("Reset Life Cycle"): st.session_state.engine = WorkflowEngine() st.success("System reset. The organism has been reborn.")
+
+if tick_button:
+    try:
+        if hasattr(engine, "tick"):
+            t = engine.tick()
+            st.info(f"Alive tick: {t}")
+        else:
+            st.warning("Tick not supported in this engine")
+
+    except Exception:
+        st.error("Tick system failed")
+        st.code(traceback.format_exc())
+
+
+# -----------------------------
+# STATE VIEWER
+# -----------------------------
+
+st.divider()
+
+st.subheader("Engine State")
+
+if hasattr(engine, "state"):
+    st.json(engine.state)
+else:
+    st.write("No state available")
+
+
+# -----------------------------
+# DEBUG PANEL
+# -----------------------------
+
+with st.expander("Debug Panel"):
+    st.write("Engine Type:", type(engine).__name__)
+    st.write("Engine Mode:", engine_mode)
+    st.write("Has run():", hasattr(engine, "run"))
+    st.write("Has tick():", hasattr(engine, "tick"))
