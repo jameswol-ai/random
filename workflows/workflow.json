@@ -1,3 +1,7 @@
+#random/workflows/workflow.json
+
+{"stage": "eco_design", "status": "ok"}
+
 architectural_workflow = {
     "adaptive_design": [
         {
