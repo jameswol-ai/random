@@ -3,25 +3,19 @@
 import streamlit as st
 from core.engine import WorkflowEngine
 
-st.title("🧠 Random Engine")
+st.title("📖 Random Narrative Mode")
 
-if st.button("Run Random"):
+if st.button("Run Story Engine"):
     engine = WorkflowEngine()
     result = engine.run()
 
-    # 🧠 Summary (NEW)
-    st.subheader("🧠 Summary")
-    st.write(result["summary"]["title"])
-    st.info(result["summary"]["insight"])
+    st.subheader("📖 Execution Story")
 
-    # ⚙️ Timeline (cleaner view)
-    st.subheader("⚙️ Execution Timeline")
-    for step in result["timeline"]:
-        if step["status"] == "ok":
-            st.success(f"{step['stage']} → completed")
-        else:
-            st.error(f"{step['stage']} → failed")
+    for line in result["story"]:
+        st.write(line)
 
-    # 📦 Context (raw brain state)
-    st.subheader("📦 Final Context")
+    st.subheader("🧠 Reflection")
+    st.info(result["summary"]["reflection"])
+
+    st.subheader("📦 Final State")
     st.json(result["final_context"])
