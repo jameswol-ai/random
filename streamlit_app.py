@@ -2,13 +2,19 @@ import streamlit as st import random import time from datetime import datetime
 
 -----------------------------
 
-🧠 Session Memory (Persistent per run)
+🧠 Session Memory
 
 -----------------------------
 
 if "history" not in st.session_state: st.session_state.history = []
 
 if "best" not in st.session_state: st.session_state.best = None
+
+City state
+
+if "city_nodes" not in st.session_state: st.session_state.city_nodes = []  # list of dicts: {id, label, score, layer}
+
+if "city_edges" not in st.session_state: st.session_state.city_edges = []  # list of dicts: {source, target}
 
 -----------------------------
 
@@ -18,9 +24,34 @@ if "best" not in st.session_state: st.session_state.best = None
 
 def generate_workflow(): steps = ["concept", "climate", "structure", "energy", "aesthetic"] random.shuffle(steps) return steps
 
-def mutate(workflow): new = workflow.copy() if random.random() < 0.5: i, j = random.sample(range(len(new)), 2) new[i], new[j] = new[j], new[i] if random.random() < 0.3: new.append("experimental") return new
+def mutate(workflow): new = workflow.copy() if random.random() < 0.5 and len(new) > 1: i, j = random.sample(range(len(new)), 2) new[i], new[j] = new[j], new[i] if random.random() < 0.3: new.append("experimental") return new
 
 def fitness(workflow): base = len(workflow) creativity = workflow.count("experimental") * 2 randomness = random.uniform(0, 2) return round(base + creativity + randomness, 2)
+
+-----------------------------
+
+🏙️ City Brain Builder
+
+-----------------------------
+
+def update_city(workflow, score): nodes = st.session_state.city_nodes edges = st.session_state.city_edges
+
+# create nodes
+for idx, step in enumerate(workflow):
+    node_id = f"{step}_{idx}"
+    nodes.append({
+        "id": node_id,
+        "label": step,
+        "score": score,
+        "layer": idx
+    })
+
+# create edges
+for i in range(len(workflow) - 1):
+    edges.append({
+        "source": f"{workflow[i]}_{i}",
+        "target": f"{workflow[i+1]}_{i+1}"
+    })
 
 -----------------------------
 
@@ -28,7 +59,7 @@ def fitness(workflow): base = len(workflow) creativity = workflow.count("experim
 
 -----------------------------
 
-st.title("🧬 Random Evolution Dashboard")
+st.title("🏙️ Random City Brain")
 
 mode = st.selectbox("Evolution Mode", ["Conservative", "Exploration", "Chaos"]) run_button = st.button("Run Evolution Cycle")
 
@@ -62,34 +93,45 @@ record = {
 
 st.session_state.history.append(record)
 
+# update city brain
+update_city(best_variant[0], best_variant[1])
+
 -----------------------------
 
-📊 Visualization
+📊 Evolution Timeline
 
 -----------------------------
 
 if st.session_state.history: st.subheader("📈 Evolution Timeline")
 
 scores = [h["best_score"] for h in st.session_state.history]
-times = [h["time"] for h in st.session_state.history]
-
 st.line_chart(scores)
 
 st.subheader("🏆 Current Best Workflow")
 st.write(st.session_state.best)
 
-st.subheader("🧾 Evolution Log")
-for h in reversed(st.session_state.history[-10:]):
-    st.write(f"[{h['time']}] Score: {h['best_score']} → {h['workflow']}")
+-----------------------------
 
-else: st.info("Run the evolution cycle to begin...")
+🏙️ City Brain Visualization
 
 -----------------------------
 
-⏱️ Auto Evolution (Optional)
+st.subheader("🏙️ City Brain Map")
+
+if st.session_state.city_nodes: for node in st.session_state.city_nodes[-20:]: st.write(f"🧱 {node['label']} (Layer {node['layer']}) | Score Influence: {node['score']}")
+
+st.subheader("🔗 Connections")
+for edge in st.session_state.city_edges[-20:]:
+    st.write(f"{edge['source']} → {edge['target']}")
+
+else: st.info("City has not formed yet. Run evolution.")
+
+-----------------------------
+
+⏱️ Auto Evolution
 
 -----------------------------
 
 auto = st.checkbox("Enable Auto Evolution")
 
-if auto: for _ in range(3): time.sleep(1) st.experimental_rerun()
+if auto: time.sleep(1) st.experimental_rerun()
