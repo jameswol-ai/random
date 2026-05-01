@@ -1,73 +1,83 @@
 import streamlit as st
 import random
 import time
-import streamlit as st
-
-# --- IMPORTANT: Fix matplotlib backend BEFORE pyplot import ---
-import matplotlib
-matplotlib.use("Agg")
-
-import matplotlib.pyplot as plt
 import numpy as np
 
+# ---------------------------
+# MUST be first Streamlit call
+# ---------------------------
+st.set_page_config(page_title="Random City Brain", layout="wide")
 
 # ---------------------------
-# App Title
+# SAFE MATPLOTLIB IMPORT
 # ---------------------------
-st.title("Random System Dashboard")
-
-st.write("Live visualization layer active.")
+try:
+    import matplotlib
+    matplotlib.use("Agg")
+    import matplotlib.pyplot as plt
+    HAS_MPL = True
+except Exception as e:
+    HAS_MPL = False
+    st.warning(f"Matplotlib unavailable: {e}")
 
 # ---------------------------
-# Safe Data Generator
+# SAFE NETWORKX IMPORT
+# ---------------------------
+try:
+    import networkx as nx
+    HAS_NX = True
+except Exception as e:
+    HAS_NX = False
+    st.warning(f"NetworkX unavailable: {e}")
+
+# ---------------------------
+# HEADER
+# ---------------------------
+st.title("🏙️ Random City Brain")
+st.caption("A living, evolving AI city simulation")
+
+# ---------------------------
+# SAFE DATA GENERATOR
 # ---------------------------
 def generate_data(n=50):
     x = np.linspace(0, 10, n)
     y = np.sin(x) + np.random.normal(0, 0.1, n)
     return x, y
 
+# ---------------------------
+# SMALL DASHBOARD CHART
+# ---------------------------
+st.subheader("Random System Dashboard")
+
+if HAS_MPL:
+    x, y = generate_data()
+    fig, ax = plt.subplots()
+    ax.plot(x, y)
+    ax.set_title("Evolving Signal (Random Flow)")
+    ax.set_xlabel("Time")
+    ax.set_ylabel("State")
+    st.pyplot(fig)
+else:
+    st.info("Plot system offline (matplotlib missing)")
 
 # ---------------------------
-# Plot Section (Matplotlib safe mode)
-# ---------------------------
-x, y = generate_data()
-
-fig, ax = plt.subplots()
-ax.plot(x, y)
-ax.set_title("Evolving Signal (Random Flow)")
-ax.set_xlabel("Time")
-ax.set_ylabel("State")
-
-st.pyplot(fig)
-
-
-# ---------------------------
-# Simple “alive system” panel
+# SYSTEM STATE PANEL
 # ---------------------------
 st.subheader("System State")
 
-state = {
+state_block = {
     "nodes": 12,
     "connections": 34,
     "entropy": round(np.random.random(), 3)
 }
 
-st.json(state)
+st.json(state_block)
 
-
-# ---------------------------
-# Optional rerun trigger (simulates evolution)
-# ---------------------------
 if st.button("Evolve system"):
-    st.experimental_rerun()
-
-st.set_page_config(page_title="Random City Brain", layout="wide")
-
-st.title("🏙️ Random City Brain")
-st.caption("A living, evolving AI city simulation")
+    st.rerun()
 
 # ---------------------------
-# 🌱 INITIAL STATE
+# INITIAL STATE
 # ---------------------------
 if "city_state" not in st.session_state:
     st.session_state.city_state = {
@@ -96,27 +106,25 @@ if "mutation_log" not in st.session_state:
     st.session_state.mutation_log = []
 
 # ---------------------------
-# ⚙️ EVOLUTION ENGINE
+# EVOLUTION ENGINE
 # ---------------------------
 def evolve_city(state, agents):
     state["cycle"] += 1
 
     growth = int(random.randint(0, 4) * agents["builder"]["bias"])
-    energy_use = int(random.randint(1, 5) * growth * agents["energy"]["bias"])
+    energy_use = int(random.randint(1, 5) * max(growth, 1) * agents["energy"]["bias"])
     recovery = int(random.randint(0, 3) * agents["nature"]["bias"])
 
     state["population"] += growth
     state["energy"] += recovery - energy_use
 
-    # Governor balancing
     if state["energy"] < 20:
         agents["builder"]["bias"] *= 0.9
         agents["energy"]["bias"] *= 1.1
 
     if state["population"] > 60:
-        agents["nature"]["bias"] *= 1.2
+        agents["nature"]["bias"] *= 1.1
 
-    # Mood
     if state["energy"] < 20:
         state["mood"] = "critical"
     elif state["population"] > 80:
@@ -124,7 +132,6 @@ def evolve_city(state, agents):
     else:
         state["mood"] = "adaptive"
 
-    # Memory
     state["history"].append({
         "cycle": state["cycle"],
         "population": state["population"],
@@ -135,7 +142,7 @@ def evolve_city(state, agents):
     return state
 
 # ---------------------------
-# 👁️ REFLECTION
+# REFLECTION ENGINE
 # ---------------------------
 def reflect(state, meta):
     energy = state["energy"]
@@ -144,44 +151,39 @@ def reflect(state, meta):
     meta["awareness"] += int((population + energy) / 50)
 
     if energy < 20:
-        thought = "Energy is low... survival is priority."
+        meta["last_thought"] = "Energy collapsing. Survival mode active."
     elif population > 80:
-        thought = "We are expanding rapidly. Stability is uncertain."
+        meta["last_thought"] = "Expansion surge detected. Stability fragile."
     elif meta["awareness"] > 50:
-        thought = "I am beginning to understand my own patterns."
+        meta["last_thought"] = "Patterns emerging across cycles..."
     else:
-        thought = "Systems are stable. Growth continues."
+        meta["last_thought"] = "Systems stable. Growth continues."
 
-    meta["last_thought"] = thought
     return meta
 
 # ---------------------------
-# 🧬 MUTATION
+# MUTATION ENGINE
 # ---------------------------
 def mutate_agents(state, agents, log):
-    energy = state["energy"]
-    population = state["population"]
-
     for name, agent in agents.items():
-        old_bias = agent["bias"]
+        old = agent["bias"]
 
-        if energy < 20:
-            change = random.uniform(0.05, 0.2)
-        elif population > 80:
-            change = random.uniform(-0.2, -0.05)
+        if state["energy"] < 20:
+            delta = random.uniform(0.05, 0.2)
+        elif state["population"] > 80:
+            delta = random.uniform(-0.2, -0.05)
         else:
-            change = random.uniform(-0.05, 0.05)
+            delta = random.uniform(-0.05, 0.05)
 
-        agent["bias"] += change
-        agent["bias"] = max(0.1, min(2.0, agent["bias"]))
+        agent["bias"] = max(0.1, min(2.0, agent["bias"] + delta))
 
-        if abs(old_bias - agent["bias"]) > 0.05:
-            log.append(f"{name}: {round(old_bias,2)} → {round(agent['bias'],2)}")
+        if abs(old - agent["bias"]) > 0.05:
+            log.append(f"{name}: {round(old,2)} → {round(agent['bias'],2)}")
 
     return agents, log
 
 # ---------------------------
-# 🕸️ GRAPH
+# GRAPH BUILDER
 # ---------------------------
 def build_graph(agents):
     G = nx.DiGraph()
@@ -199,19 +201,20 @@ def build_graph(agents):
 
 def draw_graph(G):
     pos = nx.spring_layout(G, seed=42)
+    fig, ax = plt.subplots()
 
-    plt.figure()
-    nx.draw(G, pos, with_labels=True, node_size=2000, font_size=10)
+    nx.draw(G, pos, ax=ax, with_labels=True, node_size=2000, font_size=10)
 
     nx.draw_networkx_edge_labels(
         G, pos,
-        edge_labels={(u, v): round(w, 2) for (u, v, w) in G.edges(data="weight")}
+        edge_labels={(u, v): round(w, 2) for (u, v, w) in G.edges(data="weight")},
+        ax=ax
     )
 
-    return plt
+    return fig
 
 # ---------------------------
-# 🎮 CONTROLS
+# CONTROLS
 # ---------------------------
 col1, col2 = st.columns(2)
 
@@ -235,10 +238,10 @@ with col2:
     auto = st.checkbox("∞ Autonomous Mode")
 
 # ---------------------------
-# ♾️ AUTO LOOP
+# AUTO LOOP
 # ---------------------------
 if auto:
-    for _ in range(20):
+    for _ in range(10):
         st.session_state.city_state = evolve_city(
             st.session_state.city_state,
             st.session_state.agents
@@ -256,7 +259,7 @@ if auto:
         st.rerun()
 
 # ---------------------------
-# 📊 DISPLAY
+# DISPLAY STATE
 # ---------------------------
 state = st.session_state.city_state
 
@@ -269,39 +272,46 @@ c3.metric("Energy", state["energy"])
 c4.metric("Mood", state["mood"])
 
 # ---------------------------
-# 🧠 THOUGHT
+# THOUGHT
 # ---------------------------
 st.subheader("🧠 City Thought")
 st.info(st.session_state.meta["last_thought"])
 st.metric("Awareness", st.session_state.meta["awareness"])
 
 # ---------------------------
-# 📈 HISTORY
+# HISTORY
 # ---------------------------
 if state["history"]:
     st.line_chart([h["population"] for h in state["history"]])
 
 # ---------------------------
-# 🧬 MUTATION LOG
+# MUTATION LOG
 # ---------------------------
 st.subheader("🧬 Mutation Log")
 for entry in st.session_state.mutation_log[-5:]:
     st.write(entry)
 
 # ---------------------------
-# 🕸️ GRAPH VIEW
+# GRAPH VIEW
 # ---------------------------
 st.subheader("🕸️ City Brain Network")
-G = build_graph(st.session_state.agents)
-fig = draw_graph(G)
-st.pyplot(fig)
+
+if HAS_MPL and HAS_NX:
+    G = build_graph(st.session_state.agents)
+    fig = draw_graph(G)
+    st.pyplot(fig)
+else:
+    st.info("Graph system offline")
 
 # ---------------------------
-# 🎮 GOD MODE
+# GOD MODE
 # ---------------------------
 st.subheader("🎮 God Mode")
 
-agent_choice = st.selectbox("Select Agent", list(st.session_state.agents.keys()))
+agent_choice = st.selectbox(
+    "Select Agent",
+    list(st.session_state.agents.keys())
+)
 
 if st.button("Boost Agent"):
     st.session_state.agents[agent_choice]["bias"] *= 1.2
