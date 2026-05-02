@@ -7,17 +7,26 @@ import pandas as pd
 import numpy as np
 
 # =============================
-# SAFE IMPORTS (3D + fallback)
+# SAFE IMPORTS (NO CRASH MODE)
 # =============================
+HAS_PLOTLY = False
+HAS_MPL = False
+
+# Plotly (3D)
 try:
     import plotly.graph_objects as go
     HAS_PLOTLY = True
 except Exception:
-    HAS_PLOTLY = False
+    pass
 
-import matplotlib
-matplotlib.use("Agg")
-import matplotlib.pyplot as plt
+# Matplotlib (fallback)
+try:
+    import matplotlib
+    matplotlib.use("Agg")
+    import matplotlib.pyplot as plt
+    HAS_MPL = True
+except Exception:
+    pass
 
 # =============================
 # CONFIG
@@ -194,7 +203,20 @@ st.subheader("🌆 Civilization Form")
 
 if HAS_PLOTLY:
     fig = go.Figure()
+else:
+    if HAS_MPL:
+        st.warning("Plotly missing → using fallback visualization")
 
+        heights = [g["height"] for g in memory["population"]]
+
+        fig, ax = plt.subplots()
+        ax.bar(range(len(heights)), heights)
+
+        st.pyplot(fig)
+    else:
+        st.error("No visualization libraries available.")
+        st.write("Population snapshot:")
+        st.write(memory["population"][:5])
     spacing = 50
     grid = int(len(memory["population"])**0.5)+1
 
