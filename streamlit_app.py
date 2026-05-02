@@ -1,196 +1,125 @@
 import streamlit as st
 import random
-import json
-import os
-from uuid import uuid4
+import math
 
-# =========================
-# CONFIG
-# =========================
-st.set_page_config(page_title="Random Civilization", layout="wide")
+# -----------------------------
+# RANDOM ARCHITECTURE AI
+# -----------------------------
 
-st.title("🧬 RANDOM — Living Civilization (Simple Mode)")
-st.caption("Pure Python evolution + AI brain + persistence")
+st.set_page_config(page_title="Random Architecture AI", layout="wide")
 
-SAVE_FILE = "memory.json"
+st.title("🏗️ Random AI — Architecture Evolution Engine")
+st.caption("Structures evolve. Blueprints compete. Cities self-organize.")
 
-# =========================
-# MEMORY
-# =========================
-def load_memory():
-    if os.path.exists(SAVE_FILE):
-        try:
-            with open(SAVE_FILE, "r") as f:
-                return json.load(f)
-        except:
-            pass
+# -----------------------------
+# INIT STATE
+# -----------------------------
+if "buildings" not in st.session_state:
+    st.session_state.buildings = [
+        {"id": 1, "height": 10, "width": 5, "stability": 8, "efficiency": 7},
+        {"id": 2, "height": 14, "width": 6, "stability": 6, "efficiency": 9},
+    ]
+    st.session_state.next_id = 3
+    st.session_state.tick = 0
 
+# -----------------------------
+# SCORING FUNCTION
+# -----------------------------
+def score(b):
+    # balanced architecture fitness
+    return (b["stability"] * 0.5 +
+            b["efficiency"] * 0.3 +
+            (10 - abs(b["height"] - b["width"])) * 0.2)
+
+# -----------------------------
+# MUTATION ENGINE
+# -----------------------------
+def mutate(b):
     return {
-        "generation": 0,
-        "population": [],
-        "history": [],
-        "events": []
+        "id": st.session_state.next_id,
+        "height": max(1, b["height"] + random.randint(-3, 4)),
+        "width": max(1, b["width"] + random.randint(-2, 3)),
+        "stability": min(10, max(1, b["stability"] + random.randint(-2, 2))),
+        "efficiency": min(10, max(1, b["efficiency"] + random.randint(-2, 2))),
     }
 
-def save_memory(mem):
-    with open(SAVE_FILE, "w") as f:
-        json.dump(mem, f)
+# -----------------------------
+# EVOLUTION STEP
+# -----------------------------
+def evolve():
+    new_gen = []
 
-memory = load_memory()
+    for b in st.session_state.buildings:
+        s = score(b)
 
-# =========================
-# GENOME
-# =========================
-def create_genome():
-    return {
-        "id": uuid4().hex[:6],
-        "height": random.uniform(10, 200),
-        "density": random.uniform(0.1, 1.0),
-        "complexity": random.uniform(0, 10),
-        "fitness": 0
-    }
+        # survival rule
+        if s > 7 or random.random() > 0.4:
+            new_gen.append(b)
 
-# =========================
-# WORLD SETTINGS
-# =========================
-st.sidebar.header("🌍 World")
+            # reproduction
+            if s > 8:
+                child = mutate(b)
+                st.session_state.next_id += 1
+                new_gen.append(child)
 
-env = {
-    "wind": st.sidebar.slider("Wind", 0.1, 3.0, 1.0),
-    "resources": st.sidebar.slider("Resources", 0.1, 3.0, 1.0),
-    "innovation": st.sidebar.slider("Innovation", 0.1, 3.0, 1.0),
-}
+    # always inject novelty
+    if random.random() > 0.5:
+        seed = random.choice(st.session_state.buildings)
+        new_gen.append(mutate(seed))
+        st.session_state.next_id += 1
 
-# =========================
-# FITNESS FUNCTION
-# =========================
-def fitness(g):
-    return (
-        g["height"] * env["wind"]
-        - g["density"] * env["resources"]
-        + g["complexity"] * env["innovation"]
-    )
+    st.session_state.buildings = new_gen
+    st.session_state.tick += 1
 
-# =========================
-# EVOLUTION
-# =========================
-def evolve(mem):
-    pop = mem["population"]
-
-    if not pop:
-        pop = [create_genome() for _ in range(15)]
-
-    for g in pop:
-        g["fitness"] = fitness(g)
-
-    pop.sort(key=lambda x: x["fitness"], reverse=True)
-
-    survivors = pop[:7]
-    new_pop = survivors[:]
-
-    while len(new_pop) < 15:
-        p1, p2 = random.sample(survivors, 2)
-
-        child = {
-            "id": uuid4().hex[:6],
-            "height": random.choice([p1["height"], p2["height"]]) * random.uniform(0.9, 1.1),
-            "density": random.choice([p1["density"], p2["density"]]) * random.uniform(0.9, 1.1),
-            "complexity": random.choice([p1["complexity"], p2["complexity"]]) * random.uniform(0.9, 1.1),
-            "fitness": 0
-        }
-
-        new_pop.append(child)
-
-    mem["population"] = new_pop
-    mem["generation"] += 1
-
-    best = new_pop[0]
-
-    mem["history"].append({
-        "gen": mem["generation"],
-        "fitness": best["fitness"]
-    })
-
-    mem["events"].append(f"Gen {mem['generation']} evolved")
-
-    return mem
-
-# =========================
-# AI BRAIN
-# =========================
-def brain(mem):
-    if len(mem["history"]) < 3:
-        return mem
-
-    recent = mem["history"][-3:]
-    avg = sum(h["fitness"] for h in recent) / 3
-
-    # Decision logic
-    if avg > 120:
-        # too stable → chaos
-        for g in mem["population"]:
-            g["fitness"] *= random.uniform(0.5, 0.9)
-        mem["events"].append("🧠 Brain: instability injected")
-
-    elif avg < 40:
-        # collapse → boost evolution
-        mem = evolve(mem)
-        mem["events"].append("🧠 Brain: forced evolution recovery")
-
-    else:
-        # normal evolution
-        if random.random() < 0.7:
-            mem = evolve(mem)
-            mem["events"].append("🧠 Brain: natural evolution step")
-
-    return mem
-
-# =========================
+# -----------------------------
 # CONTROLS
-# =========================
-st.sidebar.header("⚙️ Control")
+# -----------------------------
+col1, col2, col3 = st.columns(3)
 
-if st.sidebar.button("⚡ Evolve"):
-    memory = evolve(memory)
+with col1:
+    if st.button("▶ Evolve Architecture"):
+        evolve()
 
-if st.sidebar.button("🧠 Brain Step"):
-    memory = brain(memory)
+with col2:
+    if st.button("⚡ Fast Forward x10"):
+        for _ in range(10):
+            evolve()
 
-if st.sidebar.button("🌋 Catastrophe"):
-    for g in memory["population"]:
-        g["fitness"] *= random.uniform(0.2, 0.6)
-    memory["events"].append("🌋 catastrophe triggered")
+with col3:
+    if st.button("🧱 Reset City"):
+        st.session_state.buildings = [
+            {"id": 1, "height": 10, "width": 5, "stability": 8, "efficiency": 7},
+            {"id": 2, "height": 14, "width": 6, "stability": 6, "efficiency": 9},
+        ]
+        st.session_state.next_id = 3
+        st.session_state.tick = 0
 
-if st.sidebar.button("🧬 Inject Life"):
-    memory["population"].append(create_genome())
-    memory["events"].append("🧬 new entity injected")
+# -----------------------------
+# DISPLAY CITY STATE
+# -----------------------------
+st.subheader(f"City Tick: {st.session_state.tick}")
 
-# =========================
-# VISUALIZATION (TEXT ONLY)
-# =========================
-st.subheader("🌆 Civilization")
+buildings = st.session_state.buildings
 
-for g in memory["population"]:
-    bar = "█" * int(g["height"] / 10)
-    st.write(f"{g['id']} | {bar} | fit={round(g['fitness'],2)}")
+if not buildings:
+    st.error("🏚️ City collapsed — no surviving structures")
+else:
+    for b in buildings:
+        s = score(b)
 
-# =========================
-# HISTORY
-# =========================
-st.subheader("📊 History")
+        st.write(
+            f"🏢 Building {b['id']} | "
+            f"H:{b['height']} W:{b['width']} | "
+            f"S:{b['stability']} E:{b['efficiency']} | "
+            f"Score: {round(s,2)}"
+        )
 
-for h in memory["history"][-10:]:
-    st.write(f"Gen {h['gen']} → {round(h['fitness'],2)}")
+# -----------------------------
+# CITY STATUS
+# -----------------------------
+avg_score = sum(score(b) for b in buildings) / len(buildings) if buildings else 0
 
-# =========================
-# LOG
-# =========================
-st.subheader("📖 Events")
-
-for e in reversed(memory["events"][-10:]):
-    st.write(e)
-
-# =========================
-# SAVE
-# =========================
-save_memory(memory)
+if avg_score > 8:
+    st.success("🌆 Highly optimized architectural ecosystem")
+elif avg_score < 5:
+    st.warning("⚠ Structural instability spreading through the city")
