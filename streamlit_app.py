@@ -203,24 +203,11 @@ st.subheader("🌆 Civilization Form")
 
 if HAS_PLOTLY:
     fig = go.Figure()
-else:
-    if HAS_MPL:
-        st.warning("Plotly missing → using fallback visualization")
 
-        heights = [g["height"] for g in memory["population"]]
-
-        fig, ax = plt.subplots()
-        ax.bar(range(len(heights)), heights)
-
-        st.pyplot(fig)
-    else:
-        st.error("No visualization libraries available.")
-        st.write("Population snapshot:")
-        st.write(memory["population"][:5])
     spacing = 50
     grid = int(len(memory["population"])**0.5)+1
 
-    for i,g in enumerate(memory["population"]):
+    for i, g in enumerate(memory["population"]):
         gx = (i % grid)*spacing
         gy = (i // grid)*spacing
 
@@ -239,10 +226,25 @@ else:
                 mode='lines'
             ))
 
-        fig.add_trace(go.Scatter3d(x=xt,y=yt,z=zt,mode='lines'))
+        fig.add_trace(go.Scatter3d(x=xt, y=yt, z=zt, mode='lines'))
 
     fig.update_layout(height=700)
     st.plotly_chart(fig, use_container_width=True)
+
+else:
+    if HAS_MPL:
+        st.warning("Plotly missing → using fallback visualization")
+
+        heights = [g["height"] for g in memory["population"]]
+
+        fig, ax = plt.subplots()
+        ax.bar(range(len(heights)), heights)
+
+        st.pyplot(fig)
+    else:
+        st.error("No visualization libraries available.")
+        st.write("Population snapshot:")
+        st.write(memory["population"][:5])
 
 else:
     st.warning("Plotly not installed → fallback view")
